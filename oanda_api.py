@@ -12,6 +12,14 @@ class OandaAPI:
         self.session = requests.Session()
 
     def fetch_candles(self, pair_name: str, count: int, granularity: str) -> (int, Response):
+        """
+        `fetch_candles` fetches the last `count` candles of `pair_name` with `granularity` and returns a tuple of the number
+        of candles fetched and the response
+
+        :param pair_name: The name of the pair you want to fetch candles for
+        :param count: The number of candles to fetch
+        :param granularity: The time interval between each candle. Valid values are:
+        """
         url = f"{defs.OANDA_URL}/instruments/{pair_name}/candles"
 
         params: dict = dict(
