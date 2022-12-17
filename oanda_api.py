@@ -8,6 +8,7 @@ import defs
 
 class OandaAPI:
     def __init__(self):
+        self.df = None
         self.session = requests.Session()
 
     def fetch_candles(self, pair_name: str, count: int, granularity: str) -> (int, Response):
@@ -30,7 +31,6 @@ class OandaAPI:
         :param json_response: The JSON response from the API
         :return: A dataframe with the following columns:
         """
-        prices = ['mid', 'bid', 'ask']
         ohlc = ['o', 'h', 'l', 'c']
         our_data = []
 
@@ -61,7 +61,7 @@ class OandaAPI:
         """
         candles_df.to_pickle(f"his_data/{pair}_{granularity}.pkl")
 
-    def create_data(self, pair: str, granularity: str) -> None:
+    def create_data(self, pair: str, granularity: str) -> DataFrame | None:
         """
         > It fetches 4000 candles from the Oanda API, loads the data into a Pandas DataFrame, prints the number of candles
         and the time range, and then saves the data to a PKL file
@@ -69,15 +69,21 @@ class OandaAPI:
         :param pair: The currency pair to fetch data for
         :param granularity: The granularity of the candles to fetch. Valid values are:
         """
+
         response_code, json_data = self.fetch_candles(pair, 4000, granularity)
+
         if response_code != 200:
             print(f"Error: {response_code}")
             return
-        df = self.load_candles_data(json_data)
-        print(f"{pair} loaded {df.shape[0]} candles from {df.time.min()} to {df.time.max()}")
-        self.save_file(df, pair, granularity)
+
+        self.df: DataFrame = self.load_candles_data(json_data)
+
+        # converting the 'mod_col' from strings to floats
+        mod_cols = ['mid_o', 'mid_h', 'mid_l', 'mid_c']
+        self.df[mod_cols] = self.df[mod_cols].apply(pd.to_numeric)
 
 
-if __name__ == "__main__":
-    api = OandaAPI()
-    api.create_data("SPX500_USD", "H1")
+        print(f"{pair} loaded {self.df.shape[0]} candles from {self.df.time.min()} to {self.df.time.max()}")
+        # save the dataframe to file
+        self.save_file(self.df, pair, granularity)
+        return self.df
