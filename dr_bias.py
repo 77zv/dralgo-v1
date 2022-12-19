@@ -1,9 +1,11 @@
+from typing import Tuple
+
 import pandas
 import pandas as pd
 from pandas import DataFrame
 
 
-def bias(df: DataFrame):
+def bias(df: DataFrame) -> tuple[DataFrame, DataFrame, DataFrame]:
     """
     It takes a dataframe as input, and returns the highest high and lowest low of the dataframe
 
@@ -12,15 +14,12 @@ def bias(df: DataFrame):
     """
 
     # Select only the rows between 9:30 and 10:30
+    df_range: DataFrame = df.set_index('time').between_time('9:30', '10:30')
 
 
-    df_range = df.set_index('time').between_time('9:30', '10:30').reset_index()
+    # Grouping the dataframe by business day and then taking the max and min of each group.
+    df_high: DataFrame = df_range.groupby(pd.Grouper(freq='B')).max()
+    df_low: DataFrame = df_range.groupby(pd.Grouper(freq='B')).min()
 
-    print(df_range)
-    # Find the highest high and lowest low
-    highest_high = df_range['mid_h'].max()
-    lowest_low = df_range['mid_l'].min()
-    return highest_high, lowest_low
-
-
+    return df_high, df_low, df_range
 
