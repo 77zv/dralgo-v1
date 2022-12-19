@@ -90,6 +90,8 @@ class OandaAPI:
         mod_cols = ['mid_o', 'mid_h', 'mid_l', 'mid_c']
         self.df[mod_cols] = self.df[mod_cols].apply(pd.to_numeric)
 
+        # Convert the time column to datetime objects
+        self.df['time'] = pd.to_datetime(self.df['time'])
 
         print(f"{pair} loaded {self.df.shape[0]} candles from {self.df.time.min()} to {self.df.time.max()}")
         # save the dataframe to file
