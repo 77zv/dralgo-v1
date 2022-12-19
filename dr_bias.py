@@ -21,5 +21,6 @@ def bias(df: DataFrame) -> tuple[DataFrame, DataFrame, DataFrame]:
     df_high: DataFrame = df_range.groupby(pd.Grouper(freq='B')).max()
     df_low: DataFrame = df_range.groupby(pd.Grouper(freq='B')).min()
 
+
     return df_high, df_low, df_range
 

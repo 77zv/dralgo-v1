@@ -8,5 +8,5 @@ if __name__ == "__main__":
 
     dr_highs, dr_lows, dr_range = bias(SPX.df)
     print(f"The Defining Range is defined by the following candles \n{dr_range.tail(13)}\n")
-    print(f"The highs of the last 3 Defining Ranges \n{dr_highs.tail(3)}\n")
-    print(f"The lows of the last 3 Defining Ranges \n{dr_lows.tail(3)}\n")
+    # print(f"The highs of the last 3 Defining Ranges \n{dr_highs.tail(3)}\n")
+    # print(f"The lows of the last 3 Defining Ranges \n{dr_lows.tail(3)}\n")
