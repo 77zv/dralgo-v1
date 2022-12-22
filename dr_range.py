@@ -19,10 +19,13 @@ def bias(df: DataFrame) -> tuple[DataFrame, DataFrame, DataFrame]:
     # Grouping the dataframe by business day and then taking the max and min of each group.
     df_high: DataFrame = df_range.groupby(pd.Grouper(freq='B')).max().rename(
         columns={'mid_o': 'dr_high_o', 'mid_h': 'dr_high_h', 'mid_l': 'dr_high_l', 'mid_c': 'dr_high_c'})
-
     df_low: DataFrame = df_range.groupby(pd.Grouper(freq='B')).min().rename(
         columns={'mid_o': 'dr_low_o', 'mid_h': 'dr_low_h', 'mid_l': 'dr_low_l', 'mid_c': 'dr_low_c'})
 
+    dr_range = pd.concat([df_low, df_high], axis=1)
+    # adds column that is 50% of the high and low
+    dr_range['dr_equilibrium'] = (dr_range['dr_high_h'] + dr_range['dr_low_l']) / 2
+    # adds column that is 61.8% of the range between the high and low (OTE)
+    dr_range["dr_ote"] = dr_range['dr_high_h'] - (dr_range['dr_high_h'] + dr_range['dr_low_l']) * 0.618
 
-
-    return df_high, df_low, df_range
+    return df_high, df_low, dr_range
