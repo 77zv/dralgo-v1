@@ -5,7 +5,8 @@ import pandas as pd
 if __name__ == "__main__":
     SPX = OandaAPI()
     SPX.create_data("SPX500_USD", "M5")
-    # print(SPX.df.tail(120))
+    print(SPX.df.tail())
+    print(SPX.df.dtypes)
 
     pd.reset_option('max_columns')
     dr_low, dr_high, dr_range = bias(SPX.df)

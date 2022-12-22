@@ -1,3 +1,4 @@
+import pytz
 import requests
 import pandas as pd
 from pandas import DataFrame
@@ -92,6 +93,11 @@ class OandaAPI:
 
         # Convert the time column to datetime objects
         self.df['time'] = pd.to_datetime(self.df['time'])
+        # First, create a timezone object for Eastern Time
+        et = pytz.timezone('US/Eastern')
+
+        # Convert the time column to Eastern Time
+        self.df['time'] = self.df['time'].dt.tz_convert(et)
 
         print(f"{pair} loaded {self.df.shape[0]} candles from {self.df.time.min()} to {self.df.time.max()}")
         # save the dataframe to file
