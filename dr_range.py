@@ -1,6 +1,3 @@
-from typing import Tuple
-
-import pandas
 import pandas as pd
 from pandas import DataFrame
 
@@ -28,4 +25,30 @@ def bias(df: DataFrame) -> tuple[DataFrame, DataFrame, DataFrame]:
     # adds column that is 61.8% of the range between the high and low (OTE)
     dr_range["dr_ote"] = dr_range['dr_high_h'] - (dr_range['dr_high_h'] + dr_range['dr_low_l']) * 0.618
 
-    return df_high, df_low, dr_range
+    return df_low, df_high, dr_range
+
+
+def evaluate_bias(df: DataFrame) -> None:
+    # Assume that df is a DataFrame containing the data you want to check against
+
+    # Create an empty column called 'above_below'
+    df['above_below'] = ""
+
+    # Iterate over each row in the dataframe
+    for index, row in df.iterrows():
+        # Get the close price for the current day
+        close_price = row['mid_c']
+
+        # Get the high and low levels for the current day
+        dr_high_high = row['dr_high_h']
+        dr_low_low = row['dr_low_l']
+
+        if close_price > dr_high_high:
+            # Set the 'above_below' column to 'above' if the close price is above dr_high_high
+            df.loc[index, 'above_below'] = 'above'
+        elif close_price < dr_low_low:
+            # Set the 'above_below' column to 'below' if the close price is below dr_low_low
+            df.loc[index, 'above_below'] = 'below'
+        else:
+            # Set the 'above_below' column to 'between' if the close price is between dr_high_high and dr_low_low
+            df.loc[index, 'above_below'] = 'between'

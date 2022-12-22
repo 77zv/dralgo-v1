@@ -8,8 +8,10 @@ if __name__ == "__main__":
     # print(SPX.df.tail(120))
 
     pd.reset_option('max_columns')
-    dr_highs, dr_lows, dr_range = bias(SPX.df)
+    dr_low, dr_high, dr_range = bias(SPX.df)
     print(f"The Defining Range is defined by the following candles \n{dr_range.tail(13)}\n")
-    print(f"The highs of the last 3 Defining Ranges \n{dr_highs.tail(3)}\n")
-    print(f"The lows of the last 3 Defining Ranges \n{dr_lows.tail(3)}\n")
+    print(f"The highs of the last 3 Defining Ranges \n{dr_high.tail(3)}\n")
+    print(f"The lows of the last 3 Defining Ranges \n{dr_low.tail(3)}\n")
 
+    # SPX.df = pd.concat([SPX.df, dr_range], axis=1)
+    # print(f"Historic Data combined with the Defining Range: \n{SPX.df.tail(26)}\n")
