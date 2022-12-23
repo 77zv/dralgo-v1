@@ -99,7 +99,11 @@ class OandaAPI:
         # Convert the time column to Eastern Time
         self.df['time'] = self.df['time'].dt.tz_convert(et)
 
-        print(f"{pair} loaded {self.df.shape[0]} candles from {self.df.time.min()} to {self.df.time.max()}")
+        # Set the time column as the index
+        self.df.set_index('time', inplace=True)
+
+        print(f"{pair} loaded {self.df.shape[0]} candles from {self.df.index.min()} to {self.df.index.max()}")
+
         # save the dataframe to file
         self.save_file(self.df, pair, granularity)
         return self.df
