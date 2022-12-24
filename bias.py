@@ -2,7 +2,7 @@ import pandas as pd
 from datetime import datetime
 
 
-def evaluate_dr_bias(row):
+def evaluate_dr_bias(row) -> str:
     """
     If the close is greater than the daily range high, return 'Above DR High'. If the close is less than the daily range
     low, return 'Below DR Low'. Otherwise, return 'Between DR High and Low'
@@ -11,7 +11,7 @@ def evaluate_dr_bias(row):
     :return: A string
     """
 
-    def evaluate_time(df_row):
+    def evaluate_time(df_row) -> bool:
         """
         It takes a row of a dataframe as input, and returns True if the time of the row is greater than 10:30, and False
         otherwise
@@ -25,3 +25,5 @@ def evaluate_dr_bias(row):
         return 'Above DR High'
     elif row['mid_c'] < row['dr_low_l'] and evaluate_time(row):
         return 'Below DR Low'
+
+
