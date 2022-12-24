@@ -49,7 +49,7 @@ class OandaAPI:
                 continue
 
             # creating a new dict and adding the 'time' and 'volume' from the response
-            new_dict = {'time': candle['time'], 'volume': candle['volume']}
+            new_dict = {'time': candle['time']}
 
             # adding the 'ohlc' data to the dictionary
             for oh in ohlc:

@@ -9,8 +9,6 @@ def create_dr_indicator(df: DataFrame) -> DataFrame:
     :param df: The dataframe containing the data
     :return: The highest high and lowest low of the dataframe
     """
-    # removes the volume column from the dataframe
-    df = df.drop(columns=['volume'])
 
     # Selects only the rows between 9:30 and 10:30
     df_range = df.between_time('9:30', '10:30')
@@ -35,3 +33,21 @@ def create_dr_indicator(df: DataFrame) -> DataFrame:
     dr_indicator = pd.DataFrame.from_dict(dr_indicator, orient='index')
 
     return dr_indicator
+
+
+def add_dr_indicator(indicator: DataFrame, df: DataFrame) -> DataFrame:
+    """
+        For each date in the indicator dataframe, find the corresponding date in the main dataframe and add the indicator
+        values to the main dataframe
+
+        :param indicator: DataFrame
+        :param df: DataFrame
+        :return: The dataframe with the added indicators.
+        """
+    for date, row in indicator.iterrows():
+        for date2, row2 in df.iterrows():
+            if date == date2.date():
+                df.loc[date2, 'dr_high_h'] = row['dr_high_h']
+                df.loc[date2, 'dr_low_l'] = row['dr_low_l']
+                df.loc[date2, 'dr_equilibrium'] = row['dr_equilibrium']
+    return df
