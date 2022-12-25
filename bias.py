@@ -1,6 +1,8 @@
 import pandas as pd
 from datetime import datetime
 
+from pandas import DataFrame
+
 
 def evaluate_dr_bias(row) -> str:
     """
@@ -26,4 +28,11 @@ def evaluate_dr_bias(row) -> str:
     elif row['mid_c'] < row['dr_low_l'] and evaluate_time(row):
         return 'Below DR Low'
 
+
+def add_bias(bias: DataFrame, df: pd.DataFrame) -> DataFrame:
+    for date, row in bias.iterrows():
+        for date2, row2 in df.iterrows():
+            if date == date2.date():
+                df.loc[date2, 'dr_bias'] = row['dr_bias']
+    return df
 
