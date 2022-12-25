@@ -21,12 +21,10 @@ if __name__ == "__main__":
     # Grouping the dataframe by date and then taking the first value of the column 'dr_position'.
     dr_bias: DataFrame = pd.DataFrame(dr_df.groupby(dr_df.index.date)['dr_bias'].first())
 
-    # Creating a new dataframe that only contains the data between 10:30 and 16:00.
-    trading_times: DataFrame = dr_df.between_time('10:30', '16:00').copy()
+    # Creating a new dataframe that only contains the data we need for a trade
+    simulation_data: DataFrame = dr_df.between_time('10:30', '16:00')[['mid_o', 'mid_h', 'mid_l', 'mid_c', 'dr_bias', 'dr_equilibrium']].copy()
 
     # Adding the bias to the trading times dataframe.
-    dr_trades = add_bias(dr_bias, trading_times)
-
-    dr_trades = dr_trades[['mid_o', 'mid_h', 'mid_l', 'mid_c', 'dr_bias', 'dr_equilibrium']]
+    dr_trades = add_bias(dr_bias, simulation_data)
 
     print(dr_trades.tail(50))
