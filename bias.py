@@ -29,7 +29,7 @@ def evaluate_dr_bias(row) -> str:
         return 'bearish'
 
 
-def add_bias(bias: DataFrame, df: pd.DataFrame) -> DataFrame:
+def add_dr_bias(bias: DataFrame, df: pd.DataFrame) -> DataFrame:
     """
     For each date in the bias dataframe, find the corresponding date in the main dataframe and add the bias value to the
     main dataframe
@@ -45,14 +45,28 @@ def add_bias(bias: DataFrame, df: pd.DataFrame) -> DataFrame:
     return df
 
 
-def evaluate_daily_bias(daily_df: DataFrame):
-    if daily_df['mid_c'] > daily_df['mid_o']:
+def evaluate_daily_candle_close(row: DataFrame) -> str:
+    """
+    If the midpoint of the close price is greater than the midpoint of the open price, return 'bullish', else if the
+    midpoint of the close price is less than the midpoint of the open price, return 'bearish', else return 'neutral'
+
+    :param row: DataFrame - the row of data that we're evaluating
+    :return: A string
+    """
+    if row['mid_c'] > row['mid_o']:
         return 'bullish'
-    elif daily_df['mid_c'] < daily_df['mid_o']:
+    elif row['mid_c'] < row['mid_o']:
         return 'bearish'
+    return 'neutral'
 
 
-def test_bias(daily_df: DataFrame):
+def test_bias(daily_df: DataFrame) -> int:
+    """
+    If the daily candle bias is the same as the daily range bias, return 1, else return 0
+
+    :param daily_df: DataFrame
+    :return: 1 or 0
+    """
     if daily_df['daily_candle_bias'] == daily_df['dr_bias']:
         return 1
     return 0

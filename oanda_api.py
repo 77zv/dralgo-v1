@@ -70,16 +70,17 @@ class OandaAPI:
         """
         candles_df.to_pickle(f"../his_data/{pair}_{granularity}.pkl")
 
-    def create_data(self, pair: str, granularity: str) -> DataFrame | None:
+    def create_data(self, pair: str, granularity: str, count: int = 4000) -> DataFrame | None:
         """
         > It fetches 4000 candles from the Oanda API, loads the data into a Pandas DataFrame, prints the number of candles
         and the time range, and then saves the data to a PKL file
 
+        :param count:
         :param pair: The currency pair to fetch data for
         :param granularity: The granularity of the candles to fetch. Valid values are:
         """
 
-        response_code, json_data = self.fetch_candles(pair, 4000, granularity)
+        response_code, json_data = self.fetch_candles(pair, count, granularity)
 
         if response_code != 200:
             print(f"Error: {response_code}")

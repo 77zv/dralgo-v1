@@ -5,7 +5,7 @@ from bias import *
 if __name__ == "__main__":
 
     SPX = OandaAPI()
-    SPX.create_data("SPX500_USD", "M5")
+    SPX.create_data("SPX500_USD", "M5", 5000)
 
     # only keep candles after 9:30 before 16:00
     trading_day: DataFrame = SPX.df.between_time('9:30', '16:00').copy()
@@ -26,6 +26,6 @@ if __name__ == "__main__":
     simulation_data: DataFrame = dr_df.between_time('10:30', '16:00')[['mid_o', 'mid_h', 'mid_l', 'mid_c', 'dr_bias', 'dr_equilibrium']].copy()
 
     # Adding the bias to the trading times dataframe.
-    dr_trades = add_bias(dr_bias, simulation_data)
+    dr_trades = add_dr_bias(dr_bias, simulation_data)
 
 
