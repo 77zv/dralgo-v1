@@ -24,15 +24,35 @@ def evaluate_dr_bias(row) -> str:
         return df_row.name.time() > datetime.strptime('10:30', '%H:%M').time()
 
     if row['mid_c'] > row['dr_high_h'] and evaluate_time(row):
-        return 'Above DR High'
+        return 'bullish'
     elif row['mid_c'] < row['dr_low_l'] and evaluate_time(row):
-        return 'Below DR Low'
+        return 'bearish'
 
 
 def add_bias(bias: DataFrame, df: pd.DataFrame) -> DataFrame:
+    """
+    For each date in the bias dataframe, find the corresponding date in the main dataframe and add the bias value to the
+    main dataframe
+
+    :param bias: DataFrame
+    :param df: the dataframe to add the bias to
+    :return: A dataframe with the bias added to it.
+    """
     for date, row in bias.iterrows():
         for date2, row2 in df.iterrows():
             if date == date2.date():
                 df.loc[date2, 'dr_bias'] = row['dr_bias']
     return df
 
+
+def evaluate_daily_bias(daily_df: DataFrame):
+    if daily_df['mid_c'] > daily_df['mid_o']:
+        return 'bullish'
+    elif daily_df['mid_c'] < daily_df['mid_o']:
+        return 'bearish'
+
+
+def test_bias(daily_df: DataFrame):
+    if daily_df['daily_candle_bias'] == daily_df['dr_bias']:
+        return 1
+    return 0

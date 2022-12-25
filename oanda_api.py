@@ -68,7 +68,7 @@ class OandaAPI:
         :param pair: The currency pair you want to download
         :param granularity: The candlestick chart's time interval.
         """
-        candles_df.to_pickle(f"his_data/{pair}_{granularity}.pkl")
+        candles_df.to_pickle(f"../his_data/{pair}_{granularity}.pkl")
 
     def create_data(self, pair: str, granularity: str) -> DataFrame | None:
         """
@@ -103,6 +103,9 @@ class OandaAPI:
         self.df.set_index('time', inplace=True)
 
         print(f"{pair} loaded {self.df.shape[0]} candles from {self.df.index.min()} to {self.df.index.max()}")
+
+        # remove every day of the week that is sunday
+        self.df = self.df[self.df.index.dayofweek != 6]
 
         # save the dataframe to file
         self.save_file(self.df, pair, granularity)

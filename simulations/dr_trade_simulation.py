@@ -3,6 +3,7 @@ from dr_range import *
 from bias import *
 
 if __name__ == "__main__":
+
     SPX = OandaAPI()
     SPX.create_data("SPX500_USD", "M5")
 
@@ -27,4 +28,4 @@ if __name__ == "__main__":
     # Adding the bias to the trading times dataframe.
     dr_trades = add_bias(dr_bias, simulation_data)
 
-    print(dr_trades.tail(50))
+
