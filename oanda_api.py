@@ -68,7 +68,7 @@ class OandaAPI:
         :param pair: The currency pair you want to download
         :param granularity: The candlestick chart's time interval.
         """
-        candles_df.to_pickle(f"../his_data/{pair}_{granularity}.pkl")
+        candles_df.to_pickle(f"his_data/{pair}_{granularity}.pkl")
 
     def create_data(self, pair: str, granularity: str, count: int = 4000) -> DataFrame | None:
         """

@@ -3,7 +3,6 @@ from dr_range import *
 from bias import *
 
 if __name__ == "__main__":
-
     SPX = OandaAPI()
     SPX.create_data("SPX500_USD", "M5", 5000)
 
@@ -23,9 +22,50 @@ if __name__ == "__main__":
     dr_bias: DataFrame = pd.DataFrame(dr_df.groupby(dr_df.index.date)['dr_bias'].first())
 
     # Creating a new dataframe that only contains the data we need for a trade
-    simulation_data: DataFrame = dr_df.between_time('10:30', '16:00')[['mid_o', 'mid_h', 'mid_l', 'mid_c', 'dr_bias', 'dr_equilibrium']].copy()
+    simulation_data: DataFrame = dr_df.between_time('10:30', '16:00')[
+        ['mid_o', 'mid_h', 'mid_l', 'mid_c', 'dr_bias', 'dr_low_l', 'dr_high_h', 'dr_equilibrium']].copy()
 
     # Adding the bias to the trading times dataframe.
     dr_trades = add_dr_bias(dr_bias, simulation_data)
+    dr_trades.dropna(inplace=True)
 
+    print(dr_trades)
+
+    # Initialize variables to track the current position and account balance
+    position = 0  # 0 for no position, 1 for long position, -1 for short position
+    balance = 10000  # Initial account balance
+
+    # Iterate over the rows of the dr_trades dataframe
+    for index, row in dr_trades.iterrows():
+        # Check if we have a long or short position
+        if position == 1:
+            # We have a long position. Check if the price has hit the take profit level
+            if row['mid_h'] >= row['dr_high_h']:
+                # Sell at the take profit level and update the balance and position
+                balance += row['dr_high_h'] - row['dr_equilibrium']
+                position = 0
+            # Check if the price has hit the stop loss level
+            elif row['mid_h'] <= row['dr_low_l']:
+                # Sell at the stop loss level and update the balance and position
+                balance += row['dr_low_l'] - row['dr_equilibrium']
+                position = 0
+        elif position == -1:
+            # We have a short position. Check if the price has hit the take profit level
+            if row['mid_l'] <= row['dr_low_l']:
+                # Buy at the take profit level and update the balance and position
+                balance += row['dr_equilibrium'] - row['dr_low_l']
+                position = 0
+            # Check if the price has hit the stop loss level
+            elif row['mid_l'] >= row['dr_high_h']:
+                # Buy at the stop loss level and update the balance and position
+                balance += row['dr_equilibrium'] - row['dr_high_h']
+                position = 0
+        else:
+            # We don't have a position. Check if the price has hit the equilibrium level
+            if row['mid_h'] >= row['dr_equilibrium'] or row['mid_l'] <= row['dr_equilibrium']:
+                # Buy in the direction of the bias and update the position
+                position = 1 if row['dr_bias'] == 'Bullish' else -1
+
+    # Print the final balance
+    print(f'Initial balance: 10000 \nFinal balance: {balance} \nNet profit: {balance - 10000}')
 
