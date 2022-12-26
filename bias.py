@@ -60,13 +60,13 @@ def evaluate_daily_candle_close(row: DataFrame) -> str:
     return 'neutral'
 
 
-def test_bias(daily_df: DataFrame) -> int:
+def test_bias(row: DataFrame) -> int:
     """
     If the daily candle bias is the same as the daily range bias, return 1, else return 0
 
     :param daily_df: DataFrame
     :return: 1 or 0
     """
-    if daily_df['daily_candle_bias'] == daily_df['dr_bias']:
+    if row['daily_close'] == row['dr_bias']:
         return 1
     return 0
