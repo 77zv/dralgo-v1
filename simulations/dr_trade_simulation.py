@@ -86,4 +86,3 @@ if __name__ == "__main__":
 
         # Print the final balance
     print(f'Initial balance: 10000 \nFinal balance: {balance} \nNet profit: {balance - 10000}')
-
