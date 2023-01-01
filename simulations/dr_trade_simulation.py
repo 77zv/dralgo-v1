@@ -50,10 +50,13 @@ if __name__ == "__main__":
             if position == 1:
                 # We have a long position. Sell at the current price and update the balance and position
                 balance += row['mid_c'] - row['dr_equilibrium']
+                print(f"Closing at Market Close on {row.name}: long {row['mid_c'] - row['dr_equilibrium']}")
                 position = 0
             elif position == -1:
                 # We have a short position. Buy at the current price and update the balance and position
                 balance += row['dr_equilibrium'] - row['mid_c']
+                print(f"Closing at Market Close on {row.name}: short {row['dr_equilibrium'] - row['mid_c']}")
+
                 position = 0
 
         # Check if we have a long or short position
@@ -62,28 +65,28 @@ if __name__ == "__main__":
                 # We have a long position. Check if the price has hit the take profit level
                 if row['mid_h'] >= row['dr_high_h']:
                     # Sell at the take profit level and update the balance and position
-                    balance += row['dr_high_h'] - row['dr_equilibrium']
+                    balance += (row['dr_high_h'] - row['dr_equilibrium'])
                     position = 0
                     print(f"Took a win on {row.name}: long +{row['dr_high_h'] - row['dr_equilibrium']}")
                 # Check if the price has hit the stop loss level
                 elif row['mid_h'] <= row['dr_low_l']:
                     # Sell at the stop loss level and update the balance and position
-                    balance += row['dr_low_l'] - row['dr_equilibrium']
+                    balance -= (row['dr_equilibrium'] - row['dr_low_l'])
                     position = 0
                     print(f"Took a loss on {row.name}: long {row['dr_low_l'] - row['dr_equilibrium']}")
             elif position == -1:
                 # We have a short position. Check if the price has hit the take profit level
                 if row['mid_l'] <= row['dr_low_l']:
                     # Buy at the take profit level and update the balance and position
-                    balance += row['dr_equilibrium'] - row['dr_low_l']
+                    balance += (row['dr_equilibrium'] - row['dr_low_l'])
                     position = 0
-                    print(f"Took a win on {row.name}: short +{row['dr_high_h'] - row['dr_equilibrium']}")
+                    print(f"Took a win on {row.name}: short +{row['dr_equilibrium'] - row['dr_low_l']}")
                 # Check if the price has hit the stop loss level
                 elif row['mid_l'] >= row['dr_high_h']:
                     # Buy at the stop loss level and update the balance and position
-                    balance += row['dr_equilibrium'] - row['dr_high_h']
+                    balance -= (row['dr_high_h'] - row['dr_equilibrium'])
                     position = 0
-                    print(f"Took a loss {row.name}: short {row['dr_low_l'] - row['dr_equilibrium']}")
+                    print(f"Took a loss {row.name}: short {row['dr_equilibrium'] - row['dr_high_h']}")
             else:
                 # We don't have a position. Check if the price has hit the equilibrium level
                 if (row['mid_h'] >= row['dr_equilibrium'] and row['dr_bias'] == 'bearish') and index.strftime(
