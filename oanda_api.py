@@ -1,3 +1,5 @@
+import datetime
+
 import pytz
 import requests
 import pandas as pd
@@ -12,7 +14,7 @@ class OandaAPI:
         self.df = None
         self.session = requests.Session()
 
-    def fetch_candles(self, pair_name: str, count: int, granularity: str) -> (int, Response):
+    def fetch_candles(self, pair_name: str, granularity: str, count: int = 4000) -> (int, Response):
         """
         `fetch_candles` fetches the last `count` candles of `pair_name` with `granularity` and returns a tuple of the number
         of candles fetched and the response
@@ -26,10 +28,34 @@ class OandaAPI:
         params: dict = dict(
             count=count,
             granularity=granularity,
-            price="MBA"
+            price="MBA",
         )
         response: Response = self.session.get(url, params=params, headers=defs.SECURE_HEADER)
         return response.status_code, response.json()
+
+    def fetch_candles_from_dates(self, pair_name: str, granularity: str, start_time: int, end_time: int) -> (int, Response):
+        """
+        `fetch_candles` fetches the last `count` candles of `pair_name` with `granularity` and returns a tuple of the number
+        of candles fetched and the response
+
+        :param start_time: Start date range of candles
+        :param end_time:  End date of range of candles
+        :param pair_name: The name of the pair you want to fetch candles for
+        :param granularity: The time interval between each candle. Valid values are:
+        """
+        url = f"{defs.OANDA_URL}/instruments/{pair_name}/candles"
+
+        params = {
+            "granularity": granularity,
+            "price":"MBA",
+            "from": start_time,
+            "to" : end_time,
+        }
+        response: Response = self.session.get(url, params=params, headers=defs.SECURE_HEADER)
+        print(response.url)
+        # print the url for debugging
+        return response.status_code, response.json()
+
 
     @staticmethod
     def load_candles_data(json_response) -> DataFrame:
@@ -68,19 +94,25 @@ class OandaAPI:
         :param pair: The currency pair you want to download
         :param granularity: The candlestick chart's time interval.
         """
-        candles_df.to_pickle(f"his_data/{pair}_{granularity}.pkl")
+        candles_df.to_pickle(f"{pair}_{granularity}.pkl")
 
-    def create_data(self, pair: str, granularity: str, count: int = 4000) -> DataFrame | None:
+    def create_data(self, pair: str, granularity: str, count: int = 4000, start_time: int  | None = None, end_time: int | None = None) -> DataFrame | None:
         """
         > It fetches 4000 candles from the Oanda API, loads the data into a Pandas DataFrame, prints the number of candles
         and the time range, and then saves the data to a PKL file
 
+        :param end_time:
+        :param start_time:
         :param count:
         :param pair: The currency pair to fetch data for
         :param granularity: The granularity of the candles to fetch. Valid values are:
         """
+        print(start_time, end_time)
 
-        response_code, json_data = self.fetch_candles(pair, count, granularity)
+        if start_time is not None and end_time is not None:
+            response_code, json_data = self.fetch_candles_from_dates(pair, granularity, start_time, end_time)
+        else:
+            response_code, json_data = self.fetch_candles(pair, granularity, count)
 
         if response_code != 200:
             print(f"Error: {response_code}")

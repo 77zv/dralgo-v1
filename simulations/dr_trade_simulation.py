@@ -1,9 +1,7 @@
 from oanda_api import OandaAPI
-from dr_range import *
-from bias import *
+from old_dr.dr_range import *
+from old_dr.bias import *
 import pandas as pd
-import time
-from datetime import datetime
 
 if __name__ == "__main__":
     SPX = OandaAPI()
