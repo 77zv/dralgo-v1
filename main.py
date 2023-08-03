@@ -14,7 +14,8 @@ BLUE = "\033[34m"
 RESET = "\033[0m"  # Reset text attributes to default
 
 
-def backtesting_dr(df: DataFrame, range_start_time: str, range_end_time: str):
+def backtesting_dr(df: DataFrame, range_start_time: str, range_end_time: str, initial_balance: float, risk_percent: float):
+    balance = initial_balance
     for date, date_data in df.groupby(df.index.date):
         date_range_data = date_data.between_time(range_start_time, range_end_time, inclusive="left")
 
@@ -48,7 +49,6 @@ def backtesting_dr(df: DataFrame, range_start_time: str, range_end_time: str):
 
                     # Separate the data into two parts based on the closing condition
                     after_above_high = date_data[date_data.index > first_close_above_high_time]
-                    after_below_low = date_data[date_data.index > after_range_end.index[-1]]
 
                     # Check if price trades into 50% of the range after closing above the range
                     fifty_percent_level = ((highest_high - lowest_low) / 2.0) + lowest_low
@@ -56,14 +56,31 @@ def backtesting_dr(df: DataFrame, range_start_time: str, range_end_time: str):
                     trade_into_50_percent_time = None  # Initialize the variable to store the time
 
                     for _, row in after_above_high.iterrows():
-                        if row["mid_l"] <= fifty_percent_level:
+                        if row["mid_l"] < fifty_percent_level:
                             trade_into_range = True
                             trade_into_50_percent_time = row.name
                             break
 
                     if trade_into_range:
+
+                        after_trade_into_50_percent = date_data[date_data.index > trade_into_50_percent_time]
+
                         print(
-                            BLUE + f"Price trades into 50% of the range after closing above the range at: {trade_into_50_percent_time}. Price: {row['mid_c']}" + RESET)
+                            BLUE + f"Price trades into 50% of the range after closing above the range at: {trade_into_50_percent_time}. Price: {row['mid_c']}, Stop Loss: {lowest_low}, Take Profit: {highest_high}" + RESET)
+                        # Check if price hits stop loss or take profit first
+                        take_profit = highest_high
+                        stop_loss = lowest_low
+                        for _, row in after_trade_into_50_percent.iterrows():
+                            if row["mid_h"] >= take_profit:
+                                balance += balance * risk_percent
+                                print(
+                                    BLUE + f"Take profit hit at: {row.name}. New balance: {balance}" + RESET)
+                                break
+                            elif row["mid_l"] <= stop_loss:
+                                balance -= balance * risk_percent
+                                print(
+                                    RED + f"Stop loss hit at: {row.name}. New balance: {balance}" + RESET)
+                                break
                     else:
                         print(RED + "Price did not trade into 50% of the range after closing above the range." + RESET)
 
@@ -74,7 +91,6 @@ def backtesting_dr(df: DataFrame, range_start_time: str, range_end_time: str):
 
                     # Separate the data into two parts based on the closing condition
                     after_below_low = date_data[date_data.index > first_close_below_low_time]
-                    after_above_high = date_data[date_data.index > after_range_end.index[-1]]
 
                     # Check if price trades into 50% of the range after closing below the range
                     fifty_percent_level = ((highest_high - lowest_low) / 2.0) + lowest_low
@@ -82,14 +98,31 @@ def backtesting_dr(df: DataFrame, range_start_time: str, range_end_time: str):
                     trade_into_50_percent_time = None  # Initialize the variable to store the time
 
                     for _, row in after_below_low.iterrows():
-                        if row["mid_h"] >= fifty_percent_level:
+                        if row["mid_h"] > fifty_percent_level:
                             trade_into_range = True
                             trade_into_50_percent_time = row.name
                             break
 
                     if trade_into_range:
+
+                        after_trade_into_50_percent = date_data[date_data.index > trade_into_50_percent_time]
+
                         print(
-                            BLUE + f"Price trades into 50% of the range after closing below the range at: {trade_into_50_percent_time}. Price: {row['mid_c']}" + RESET)
+                            BLUE + f"Price trades into 50% of the range after closing below the range at: {trade_into_50_percent_time}. Price: {row['mid_c']}, Stop Loss: {highest_high}, Take Profit: {lowest_low}" + RESET)
+                        # Check if price hits stop loss or take profit first
+                        take_profit = lowest_low
+                        stop_loss = highest_high
+                        for _, row in after_trade_into_50_percent.iterrows():
+                            if row["mid_l"] <= take_profit:
+                                balance += balance * risk_percent
+                                print(
+                                    BLUE + f"Take profit hit at: {row.name}. New balance: {balance}" + RESET)
+                                break
+                            elif row["mid_h"] >= stop_loss:
+                                balance -= balance * risk_percent
+                                print(
+                                    RED + f"Stop loss hit at: {row.name}. New balance: {balance}" + RESET)
+                                break
                     else:
                         print(RED + "Price did not trade into 50% of the range after closing below the range." + RESET)
 
@@ -97,8 +130,9 @@ def backtesting_dr(df: DataFrame, range_start_time: str, range_end_time: str):
 
 
 
+
 SPX: OandaAPI = OandaAPI()
 data : DataFrame = SPX.create_data("SPX500_USD", "M15")
 print(data)
 
-backtesting_dr(data, "9:30", "10:30")
+backtesting_dr(data, "9:30", "10:30", 10000, 0.02)
