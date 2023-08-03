@@ -94,7 +94,7 @@ class OandaAPI:
         :param pair: The currency pair you want to download
         :param granularity: The candlestick chart's time interval.
         """
-        candles_df.to_pickle(f"{pair}_{granularity}.pkl")
+        candles_df.to_pickle(f"his_data/{pair}_{granularity}.pkl")
 
     def create_data(self, pair: str, granularity: str, count: int = 4000, start_time: int  | None = None, end_time: int | None = None) -> DataFrame | None:
         """
@@ -107,7 +107,6 @@ class OandaAPI:
         :param pair: The currency pair to fetch data for
         :param granularity: The granularity of the candles to fetch. Valid values are:
         """
-        print(start_time, end_time)
 
         if start_time is not None and end_time is not None:
             response_code, json_data = self.fetch_candles_from_dates(pair, granularity, start_time, end_time)
