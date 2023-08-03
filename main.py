@@ -46,25 +46,52 @@ def backtesting_dr(df: DataFrame, range_start_time: str, range_end_time: str):
                     print(
                         YELLOW + f"First close above highest high after range end time at: {first_close_above_high_time}" + RESET)
 
+                    # Separate the data into two parts based on the closing condition
+                    after_above_high = date_data[date_data.index > first_close_above_high_time]
+                    after_below_low = date_data[date_data.index > after_range_end.index[-1]]
+
+                    # Check if price trades into 50% of the range after closing above the range
+                    fifty_percent_level = ((highest_high - lowest_low) / 2.0) + lowest_low
+                    trade_into_range = False  # Initialize the variable
+                    trade_into_50_percent_time = None  # Initialize the variable to store the time
+
+                    for _, row in after_above_high.iterrows():
+                        if row["mid_l"] <= fifty_percent_level:
+                            trade_into_range = True
+                            trade_into_50_percent_time = row.name
+                            break
+
+                    if trade_into_range:
+                        print(
+                            BLUE + f"Price trades into 50% of the range after closing above the range at: {trade_into_50_percent_time}. Price: {row['mid_c']}" + RESET)
+                    else:
+                        print(RED + "Price did not trade into 50% of the range after closing above the range." + RESET)
+
                 if not below_low_after_range.empty:
                     first_close_below_low_time = below_low_after_range.index[0]
                     print(
                         YELLOW + f"First close below lowest low after range end time at: {first_close_below_low_time}" + RESET)
 
-                # Save whichever occurs first in the same day
-                if not above_high_after_range.empty and not below_low_after_range.empty:
-                    if first_close_above_high_time < first_close_below_low_time:
+                    # Separate the data into two parts based on the closing condition
+                    after_below_low = date_data[date_data.index > first_close_below_low_time]
+                    after_above_high = date_data[date_data.index > after_range_end.index[-1]]
+
+                    # Check if price trades into 50% of the range after closing below the range
+                    fifty_percent_level = ((highest_high - lowest_low) / 2.0) + lowest_low
+                    trade_into_range = False  # Initialize the variable
+                    trade_into_50_percent_time = None  # Initialize the variable to store the time
+
+                    for _, row in after_below_low.iterrows():
+                        if row["mid_h"] >= fifty_percent_level:
+                            trade_into_range = True
+                            trade_into_50_percent_time = row.name
+                            break
+
+                    if trade_into_range:
                         print(
-                            YELLOW + f"Price first closes above the range after the range end time in the same day at: {first_close_above_high_time}" + RESET)
+                            BLUE + f"Price trades into 50% of the range after closing below the range at: {trade_into_50_percent_time}. Price: {row['mid_c']}" + RESET)
                     else:
-                        print(
-                            YELLOW + f"Price first closes below the range after the range end time in the same day at: {first_close_below_low_time}" + RESET)
-                elif not above_high_after_range.empty:
-                    print(
-                        YELLOW + f"Price first closes above the range after the range end time in the same day at: {first_close_above_high_time}" + RESET)
-                elif not below_low_after_range.empty:
-                    print(
-                        YELLOW + f"Price first closes below the range after the range end time in the same day at: {first_close_below_low_time}" + RESET)
+                        print(RED + "Price did not trade into 50% of the range after closing below the range." + RESET)
 
         print("\n")
 
@@ -74,4 +101,4 @@ SPX: OandaAPI = OandaAPI()
 data : DataFrame = SPX.create_data("SPX500_USD", "M15")
 print(data)
 
-print_dataframe_by_date(data, "9:30", "10:30")
+backtesting_dr(data, "9:30", "10:30")
