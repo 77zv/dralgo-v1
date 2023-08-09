@@ -71,12 +71,13 @@ def backtesting_dr(df: DataFrame, range_start_time: str, range_end_time: str, in
 
                         after_trade_into_50_percent = date_data[date_data.index > trade_into_50_percent_time]
 
-                        print(
-                            BLUE + f"Price trades into 50% of the range after closing above the range at: {trade_into_50_percent_time}. Price: {row['mid_c']}, Stop Loss: {lowest_low}, Take Profit: {highest_high}" + RESET)
-
                         # Check if price hits stop loss or take profit first
-                        take_profit = highest_high + (highest_high - fifty_percent_level) * rr
+                        take_profit = highest_high + ((highest_high - fifty_percent_level) * rr)
                         stop_loss = lowest_low
+
+                        print(
+                            BLUE + f"Price trades into 50% of the range after closing above the range at: {trade_into_50_percent_time}. Price: {row['mid_c']}, Stop Loss: {stop_loss}, Take Profit: {take_profit}" + RESET)
+
                         for _, row in after_trade_into_50_percent.iterrows():
                             if row["mid_h"] >= take_profit:
                                 balance += balance * risk_percent
@@ -114,11 +115,12 @@ def backtesting_dr(df: DataFrame, range_start_time: str, range_end_time: str, in
 
                         after_trade_into_50_percent = date_data[date_data.index > trade_into_50_percent_time]
 
-                        print(
-                            BLUE + f"Price trades into 50% of the range after closing below the range at: {trade_into_50_percent_time}. Price: {row['mid_c']}, Stop Loss: {highest_high}, Take Profit: {lowest_low}" + RESET)
                         # Check if price hits stop loss or take profit first
-                        take_profit = lowest_low - (fifty_percent_level - lowest_low) * rr
+                        take_profit = lowest_low - ((fifty_percent_level - lowest_low) * rr)
                         stop_loss = highest_high
+
+                        print(
+                            BLUE + f"Price trades into 50% of the range after closing below the range at: {trade_into_50_percent_time}. Price: {row['mid_c']}, Stop Loss: {stop_loss}, Take Profit: {take_profit}" + RESET)
                         for _, row in after_trade_into_50_percent.iterrows():
                             if row["mid_l"] <= take_profit:
                                 balance += balance * risk_percent
@@ -136,7 +138,6 @@ def backtesting_dr(df: DataFrame, range_start_time: str, range_end_time: str, in
         print("\n")
 
     print(BLUE + f"Final balance: {balance}" + RESET)
-    # print(BLUE + f"Profit/Loss: {balance - initial_balance}" + RESET)
 
     return balance
 

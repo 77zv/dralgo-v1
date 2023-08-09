@@ -37,9 +37,4 @@ def run_backtest(callback: Callable, initial_balance: float, risk : float, rr: i
         balance: float = backtesting_dr(data, "9:30", "10:30", balance, risk, rr)
 
 
-run_backtest(backtesting_dr, 10000, 0.02, 2, 12)
-
-# spx: OandaAPI = OandaAPI()
-# data: DataFrame = spx.create_data("SPX500_USD", "M15", 4000, 1667260800,1669852799)
-# print(data)
-
+run_backtest(backtesting_dr, 10000, 0.02, 1, 12)
