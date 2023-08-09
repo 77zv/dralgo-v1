@@ -107,6 +107,7 @@ class OandaAPI:
         """
 
         if start_time is not None and end_time is not None:
+            print(f"Fetching candles from {start_time} to {end_time}")
             response_code, json_data = self.fetch_candles_from_dates(pair, granularity, start_time, end_time)
         else:
             response_code, json_data = self.fetch_candles(pair, granularity, count)

@@ -1,5 +1,6 @@
 import datetime
-
+import calendar
+import time
 def his_data_filepath(pair, granularity):
     """
     It takes a pair and a granularity and returns a filepath
@@ -35,3 +36,39 @@ def get_dates_in_unix_time_past(num_w):
         dates_unix_time.append([datetime.datetime.fromtimestamp(monday_unix_time).isoformat(), datetime.datetime.fromtimestamp(friday_unix_time).isoformat()])
 
     return dates_unix_time
+
+
+def get_months(num_months) -> tuple:
+    today = time.time()
+    current_year = time.localtime(today).tm_year
+    current_month = time.localtime(today).tm_mon
+    current_day = time.localtime(today).tm_mday
+    current_hour = time.localtime(today).tm_hour
+    current_minute = time.localtime(today).tm_min
+    current_second = time.localtime(today).tm_sec
+
+    start_dates = []
+    end_dates = []
+
+    for i in range(num_months):
+        year = current_year
+        month = current_month - i
+
+        if month <= 0:
+            year -= 1
+            month = 12 + month
+
+        last_day = calendar.monthrange(year, month)[1]
+        last_day = min(last_day, current_day if month == current_month else last_day)
+
+        first_date_unix = calendar.timegm((year, month, 1, 0, 0, 0))
+
+        if month == current_month:
+            end_date_unix = calendar.timegm((year, month, last_day, current_hour, current_minute, current_second))
+        else:
+            end_date_unix = calendar.timegm((year, month, last_day, 23, 59, 59))
+
+        start_dates.append(first_date_unix)
+        end_dates.append(end_date_unix)
+
+    return start_dates, end_dates

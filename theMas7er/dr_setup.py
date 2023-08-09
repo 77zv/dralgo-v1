@@ -11,7 +11,7 @@ BLUE = "\033[34m"
 RESET = "\033[0m"  # Reset text attributes to default
 
 
-def backtesting_dr(df: DataFrame, range_start_time: str, range_end_time: str, initial_balance: float, risk_percent: float):
+def backtesting_dr(df: DataFrame, range_start_time: str, range_end_time: str, initial_balance: float, risk_percent: float) -> float:
     balance = initial_balance
     for date, date_data in df.groupby(df.index.date):
         date_range_data = date_data.between_time(range_start_time, range_end_time, inclusive="left")
@@ -136,5 +136,7 @@ def backtesting_dr(df: DataFrame, range_start_time: str, range_end_time: str, in
         print("\n")
 
     print(BLUE + f"Final balance: {balance}" + RESET)
-    print(BLUE + f"Profit/Loss: {balance - initial_balance}" + RESET)
+    # print(BLUE + f"Profit/Loss: {balance - initial_balance}" + RESET)
+
+    return balance
 
