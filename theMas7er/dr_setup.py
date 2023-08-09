@@ -11,7 +11,7 @@ BLUE = "\033[34m"
 RESET = "\033[0m"  # Reset text attributes to default
 
 
-def backtesting_dr(df: DataFrame, range_start_time: str, range_end_time: str, initial_balance: float, risk_percent: float) -> float:
+def backtesting_dr(df: DataFrame, range_start_time: str, range_end_time: str, initial_balance: float, risk_percent: float, rr: int) -> float:
     balance = initial_balance
     for date, date_data in df.groupby(df.index.date):
         date_range_data = date_data.between_time(range_start_time, range_end_time, inclusive="left")
@@ -75,7 +75,7 @@ def backtesting_dr(df: DataFrame, range_start_time: str, range_end_time: str, in
                             BLUE + f"Price trades into 50% of the range after closing above the range at: {trade_into_50_percent_time}. Price: {row['mid_c']}, Stop Loss: {lowest_low}, Take Profit: {highest_high}" + RESET)
 
                         # Check if price hits stop loss or take profit first
-                        take_profit = highest_high
+                        take_profit = highest_high + (highest_high - fifty_percent_level) * rr
                         stop_loss = lowest_low
                         for _, row in after_trade_into_50_percent.iterrows():
                             if row["mid_h"] >= take_profit:
@@ -117,7 +117,7 @@ def backtesting_dr(df: DataFrame, range_start_time: str, range_end_time: str, in
                         print(
                             BLUE + f"Price trades into 50% of the range after closing below the range at: {trade_into_50_percent_time}. Price: {row['mid_c']}, Stop Loss: {highest_high}, Take Profit: {lowest_low}" + RESET)
                         # Check if price hits stop loss or take profit first
-                        take_profit = lowest_low
+                        take_profit = lowest_low - (fifty_percent_level - lowest_low) * rr
                         stop_loss = highest_high
                         for _, row in after_trade_into_50_percent.iterrows():
                             if row["mid_l"] <= take_profit:

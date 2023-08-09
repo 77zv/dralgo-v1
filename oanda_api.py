@@ -1,3 +1,5 @@
+import time
+
 import pytz
 import requests
 import pandas as pd
@@ -43,14 +45,19 @@ class OandaAPI:
         """
         url = f"{defs.OANDA_URL}/instruments/{pair_name}/candles"
 
-        params = {
-            "granularity": granularity,
-            "price":"MBA",
-            "from": start_time,
-            "to" : end_time,
-        }
+        # params = {
+        #     "granularity": granularity,
+        #     "from": start_time,
+        #     "to" : end_time,
+        # }
+        params = dict(
+            granularity=granularity,
+            price="MBA",
+            from_=start_time,
+            to=end_time,
+        )
         response: Response = self.session.get(url, params=params, headers=defs.SECURE_HEADER)
-        print(response.url)
+        print(f"url: {response.url}")
         # print the url for debugging
         return response.status_code, response.json()
 
@@ -107,7 +114,11 @@ class OandaAPI:
         """
 
         if start_time is not None and end_time is not None:
-            print(f"Fetching candles from {start_time} to {end_time}")
+
+            start_date_str = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(start_time))
+            end_date_str = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(end_time))
+
+            print(f"Fetching candles from {start_date_str} to {end_date_str}")
             response_code, json_data = self.fetch_candles_from_dates(pair, granularity, start_time, end_time)
         else:
             response_code, json_data = self.fetch_candles(pair, granularity, count)
