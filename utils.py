@@ -15,7 +15,7 @@ def his_data_filepath(pair, granularity):
 def get_dates_in_unix_time_past(num_w):
     # Get the current date and time
     today = datetime.datetime.now()
-
+    
     # Find the last Monday
     current_day_of_week = today.weekday()
     days_until_last_monday = (current_day_of_week + 1) % 7

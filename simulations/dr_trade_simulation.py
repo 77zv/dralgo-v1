@@ -1,6 +1,6 @@
 from oanda_api import OandaAPI
-from old_dr.dr_range import *
-from old_dr.bias import *
+from theMas7er.old_dr.dr_range import *
+from theMas7er.old_dr.bias import *
 import pandas as pd
 
 if __name__ == "__main__":
