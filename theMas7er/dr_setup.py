@@ -41,7 +41,14 @@ def backtesting_dr(df: DataFrame, range_start_time: str, range_end_time: str, in
                 above_high_after_range = after_range_end[after_range_end["mid_c"] > highest_high]
                 below_low_after_range = after_range_end[after_range_end["mid_c"] < lowest_low]
 
-                if not above_high_after_range.empty and above_high_after_range.index[0] < below_low_after_range.index[0]:
+                # Check if the price first closes above or below the range after the range end time and in the same day
+                if not below_low_after_range.empty and not above_high_after_range.empty and above_high_after_range.index[0] < below_low_after_range.index[0]:
+                    below_low_after_range = pd.DataFrame()
+                elif not below_low_after_range.empty and not above_high_after_range.empty and below_low_after_range.index[0] < above_high_after_range.index[0]:
+                    above_high_after_range = pd.DataFrame()
+
+
+                if not above_high_after_range.empty:
                     first_close_above_high_time = above_high_after_range.index[0]
                     print(
                         YELLOW + f"First close above highest high after range end time at: {first_close_above_high_time}" + RESET)
@@ -84,7 +91,7 @@ def backtesting_dr(df: DataFrame, range_start_time: str, range_end_time: str, in
                     else:
                         print(RED + "Price did not trade into 50% of the range after closing above the range." + RESET)
 
-                if not below_low_after_range.empty and below_low_after_range.index[0] < above_high_after_range.index[0]:
+                if not below_low_after_range.empty:
                     first_close_below_low_time = below_low_after_range.index[0]
                     print(
                         YELLOW + f"First close below lowest low after range end time at: {first_close_below_low_time}" + RESET)

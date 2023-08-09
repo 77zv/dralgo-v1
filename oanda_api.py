@@ -1,5 +1,3 @@
-import datetime
-
 import pytz
 import requests
 import pandas as pd
