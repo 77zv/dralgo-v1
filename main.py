@@ -43,7 +43,7 @@ def run_backtest(callback: Callable, initial_balance: float, risk : float, rr: i
 
 
 num_months = 12
-run_backtest(backtesting_dr, 10000, 0.02, 1, 100)
+run_backtest(backtesting_dr, 10000, 0.02, 1, 4)
 
 # num_weeks = 52  # Replace with the number of weeks you want
 # start_dates, end_dates = get_weeks(num_weeks)

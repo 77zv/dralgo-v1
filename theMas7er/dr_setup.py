@@ -13,6 +13,7 @@ RESET = "\033[0m"  # Reset text attributes to default
 
 def backtesting_dr(df: DataFrame, range_start_time: str, range_end_time: str, initial_balance: float, risk_percent: float, rr: int) -> float:
     balance = initial_balance
+
     for date, date_data in df.groupby(df.index.date):
         date_range_data = date_data.between_time(range_start_time, range_end_time, inclusive="left")
 
@@ -36,17 +37,17 @@ def backtesting_dr(df: DataFrame, range_start_time: str, range_end_time: str, in
             # The data after the range end time
             after_range_end = date_data[date_data.index >= end_time]
 
-            # Find the first series to close above the highest high or lowest low after the range end time
             if not after_range_end.empty:
                 above_high_after_range = after_range_end[after_range_end["mid_c"] > highest_high]
                 below_low_after_range = after_range_end[after_range_end["mid_c"] < lowest_low]
 
                 # Check if the price first closes above or below the range after the range end time and in the same day
-                if not below_low_after_range.empty and not above_high_after_range.empty and above_high_after_range.index[0] < below_low_after_range.index[0]:
-                    below_low_after_range = pd.DataFrame()
-                elif not below_low_after_range.empty and not above_high_after_range.empty and below_low_after_range.index[0] < above_high_after_range.index[0]:
-                    above_high_after_range = pd.DataFrame()
-
+                if not below_low_after_range.empty and not above_high_after_range.empty and \
+                        above_high_after_range.index[0] < below_low_after_range.index[0]:
+                    below_low_after_range = DataFrame()
+                elif not below_low_after_range.empty and not above_high_after_range.empty and \
+                        below_low_after_range.index[0] < above_high_after_range.index[0]:
+                    above_high_after_range = DataFrame()
 
                 if not above_high_after_range.empty:
                     first_close_above_high_time = above_high_after_range.index[0]
@@ -78,17 +79,29 @@ def backtesting_dr(df: DataFrame, range_start_time: str, range_end_time: str, in
                         print(
                             BLUE + f"Price trades into 50% of the range after closing above the range at: {trade_into_50_percent_time}. Price: {row['mid_c']}, Stop Loss: {stop_loss}, Take Profit: {take_profit}" + RESET)
 
+                        trade_closed = False  # Initialize the variable to track if the trade is closed
+
                         for _, row in after_trade_into_50_percent.iterrows():
                             if row["mid_h"] >= take_profit:
                                 balance += balance * risk_percent
                                 print(
                                     BLUE + f"Take profit hit at: {row.name}. New balance: {balance}" + RESET)
+                                trade_closed = True
                                 break
                             elif row["mid_l"] <= stop_loss:
                                 balance -= balance * risk_percent
                                 print(
                                     RED + f"Stop loss hit at: {row.name}. New balance: {balance}" + RESET)
+                                trade_closed = True
                                 break
+
+                        if not trade_closed and after_trade_into_50_percent.index[-1].time() >= pd.Timestamp(
+                                "16:15").time():
+                            balance -= balance * risk_percent
+                            print(
+                                RED + f"Trade automatically closed at 4:15 pm. New balance: {balance}" + RESET)
+                            print(row["mid_c"])
+
                     else:
                         print(RED + "Price did not trade into 50% of the range after closing above the range." + RESET)
 
@@ -121,23 +134,34 @@ def backtesting_dr(df: DataFrame, range_start_time: str, range_end_time: str, in
 
                         print(
                             BLUE + f"Price trades into 50% of the range after closing below the range at: {trade_into_50_percent_time}. Price: {row['mid_c']}, Stop Loss: {stop_loss}, Take Profit: {take_profit}" + RESET)
+                        trade_closed = False  # Initialize the variable to track if the trade is closed
+
                         for _, row in after_trade_into_50_percent.iterrows():
                             if row["mid_l"] <= take_profit:
                                 balance += balance * risk_percent
                                 print(
                                     BLUE + f"Take profit hit at: {row.name}. New balance: {balance}" + RESET)
+                                trade_closed = True
                                 break
                             elif row["mid_h"] >= stop_loss:
                                 balance -= balance * risk_percent
                                 print(
                                     RED + f"Stop loss hit at: {row.name}. New balance: {balance}" + RESET)
+                                trade_closed = True
                                 break
+
+                        if not trade_closed and after_trade_into_50_percent.index[-1].time() >= pd.Timestamp(
+                                "16:15").time():
+                            balance -= balance * risk_percent
+                            print(
+                                RED + f"Trade automatically closed at 4:15 pm. New balance: {balance}" + RESET)
+                            print(row["mid_c"])
+
                     else:
                         print(RED + "Price did not trade into 50% of the range after closing below the range." + RESET)
 
         print("\n")
 
     print(BLUE + f"Final balance: {balance}" + RESET)
-
     return balance
 
