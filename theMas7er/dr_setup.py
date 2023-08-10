@@ -94,13 +94,20 @@ def backtesting_dr(df: DataFrame, range_start_time: str, range_end_time: str, in
                                     RED + f"Stop loss hit at: {row.name}. New balance: {balance}" + RESET)
                                 trade_closed = True
                                 break
-
+                        # if the trade is not closed by 16:45, close it automatically
                         if not trade_closed and after_trade_into_50_percent.index[-1].time() >= pd.Timestamp(
-                                "16:15").time():
-                            balance -= balance * risk_percent
-                            print(
-                                RED + f"Trade automatically closed at 4:15 pm. New balance: {balance}" + RESET)
-                            print(row["mid_c"])
+                                "16:45").time():
+
+                            if row["mid_c"] >= fifty_percent_level:
+                                above_fifty_percent_level_after_close = (row["mid_c"] - fifty_percent_level)/ (take_profit - fifty_percent_level) * risk_percent * balance
+                                balance += above_fifty_percent_level_after_close
+                                print(
+                                    RED + f"Trade automatically closed at {after_trade_into_50_percent.index[-1]}. New balance: {balance}, taking a win of +{above_fifty_percent_level_after_close}" + RESET)
+                            else:
+                                below_fifty_percent_level_after_close = (fifty_percent_level - row["mid_c"]) / (fifty_percent_level - take_profit) * risk_percent * balance
+                                balance -= below_fifty_percent_level_after_close
+                                print(
+                                    RED + f"Trade automatically closed at {after_trade_into_50_percent.index[-1]}. New balance: {balance}, taking a loss of -{below_fifty_percent_level_after_close}" + RESET)
 
                     else:
                         print(RED + "Price did not trade into 50% of the range after closing above the range." + RESET)
@@ -150,12 +157,20 @@ def backtesting_dr(df: DataFrame, range_start_time: str, range_end_time: str, in
                                 trade_closed = True
                                 break
 
+                        # if the trade is not closed by 16:45, close it automatically
                         if not trade_closed and after_trade_into_50_percent.index[-1].time() >= pd.Timestamp(
-                                "16:15").time():
-                            balance -= balance * risk_percent
-                            print(
-                                RED + f"Trade automatically closed at 4:15 pm. New balance: {balance}" + RESET)
-                            print(row["mid_c"])
+                                "16:45").time():
+
+                            if row["mid_c"] >= fifty_percent_level:
+                                above_fifty_percent_level_after_close = (row["mid_c"] - fifty_percent_level)/ (take_profit - fifty_percent_level) * risk_percent * balance
+                                balance -= above_fifty_percent_level_after_close
+                                print(
+                                    RED + f"Trade automatically closed at {after_trade_into_50_percent.index[-1]}. New balance: {balance}, taking a loss of -{above_fifty_percent_level_after_close}" + RESET)
+                            else:
+                                below_fifty_percent_level_after_close = (fifty_percent_level - row["mid_c"]) / (fifty_percent_level - take_profit) * risk_percent * balance
+                                balance += below_fifty_percent_level_after_close
+                                print(
+                                    RED + f"Trade automatically closed at {after_trade_into_50_percent.index[-1]}. New balance: {balance}, taking a win of +{below_fifty_percent_level_after_close}" + RESET)
 
                     else:
                         print(RED + "Price did not trade into 50% of the range after closing below the range." + RESET)

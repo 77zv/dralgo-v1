@@ -20,17 +20,17 @@ from theMas7er.dr_setup import backtesting_dr
 MAGENTA_BG = "\u001b[45m"
 BLACK = "\u001b[40m"
 
-def run_backtest(callback: Callable, initial_balance: float, risk : float, rr: int, num_months: int):
+def run_backtest(callback: Callable, initial_balance: float, risk : float, rr: int, num_weeks: int):
     pd.set_option('display.max_rows', 1000)
 
     spx: OandaAPI = OandaAPI()
 
     # start_dates, end_dates = get_months(num_months)
-    start_dates, end_dates = get_weeks(num_months)
+    start_dates, end_dates = get_weeks(num_weeks)
 
     balance = initial_balance
 
-    for i in range(num_months):
+    for i in range(num_weeks):
 
         start_date_str = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(start_dates[i]))
         end_date_str = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(end_dates[i]))
@@ -42,8 +42,8 @@ def run_backtest(callback: Callable, initial_balance: float, risk : float, rr: i
     print(BLACK + f"Initial Balance: {initial_balance}, Risk: {risk*100}%, RR: {rr} \nFinal Balance: {balance} with a return of {((balance - initial_balance) / initial_balance) * 100}%")
 
 
-num_months = 12
-run_backtest(backtesting_dr, 10000, 0.02, 1, 4)
+weeks = 100
+run_backtest(backtesting_dr, 10000, 0.02, 1, weeks)
 
 # num_weeks = 52  # Replace with the number of weeks you want
 # start_dates, end_dates = get_weeks(num_weeks)
