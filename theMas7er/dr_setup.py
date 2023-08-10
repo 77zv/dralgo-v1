@@ -72,7 +72,7 @@ def backtesting_dr(df: DataFrame, range_start_time: str, range_end_time: str, in
                         after_trade_into_50_percent = date_data[date_data.index > trade_into_50_percent_time]
 
                         # Check if price hits stop loss or take profit first
-                        take_profit = highest_high + ((highest_high - fifty_percent_level) * rr)
+                        take_profit = fifty_percent_level + ((highest_high - fifty_percent_level) * rr)
                         stop_loss = lowest_low
 
                         print(
@@ -116,7 +116,7 @@ def backtesting_dr(df: DataFrame, range_start_time: str, range_end_time: str, in
                         after_trade_into_50_percent = date_data[date_data.index > trade_into_50_percent_time]
 
                         # Check if price hits stop loss or take profit first
-                        take_profit = lowest_low - ((fifty_percent_level - lowest_low) * rr)
+                        take_profit = fifty_percent_level - ((fifty_percent_level - lowest_low) * rr)
                         stop_loss = highest_high
 
                         print(
