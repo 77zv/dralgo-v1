@@ -1,58 +1,102 @@
-import array
-from typing import Callable
+from pandas import DataFrame
+
+from theMas7er.dr_setup import backtesting_dr
+from theMas7er.dr_setup import run_backtest
+
 
 import pandas as pd
 
-from pandas import DataFrame
+
 from oanda_api import OandaAPI
-from utils import get_months, get_weeks
-import time
+from utils import get_weeks
 
-from theMas7er.dr_setup import backtesting_dr
+# weeks = 156
+# run_backtest(backtesting_dr, 10000, 0.01, 1, weeks)
 
-# num_months = 12
+pd.set_option('display.max_rows', 1000)
+
+spx: OandaAPI = OandaAPI()
+
 # start_dates, end_dates = get_months(num_months)
-# for i in range(num_months):
-#     start_date_str = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(start_dates[i]))
-#     end_date_str = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(end_dates[i]))
-#     print(f"Month {i + 1}: Start Date: {start_date_str}, End Date: {end_date_str}")
-
-MAGENTA_BG = "\u001b[45m"
-BLACK = "\u001b[40m"
-
-def run_backtest(callback: Callable, initial_balance: float, risk : float, rr: int, num_weeks: int):
-    pd.set_option('display.max_rows', 1000)
-
-    spx: OandaAPI = OandaAPI()
-
-    # start_dates, end_dates = get_months(num_months)
-    start_dates, end_dates = get_weeks(num_weeks)
-
-    balance = initial_balance
-
-    for i in range(num_weeks):
-
-        start_date_str = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(start_dates[i]))
-        end_date_str = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(end_dates[i]))
-        print(f"Month {i + 1}: Start Date: {start_date_str}, End Date: {end_date_str}")
-
-        data: DataFrame = spx.create_data("SPX500_USD", "M15", 4000, start_dates[i], end_dates[i])
-        balance: float = backtesting_dr(data, "9:30", "10:30", balance, risk, rr)
-
-    print(BLACK + f"Initial Balance: {initial_balance}, Risk: {risk*100}%, RR: {rr} \nFinal Balance: {balance} with a return of {((balance - initial_balance) / initial_balance) * 100}%")
+start_dates, end_dates = get_weeks(1)
+data: DataFrame = spx.create_data("SPX500_USD", "M15", 4000, start_dates[0], end_dates[0])
 
 
-weeks = 100
-run_backtest(backtesting_dr, 10000, 0.02, 1, weeks)
+def is_bullish_fair_value_gap(prev_row, next_row):
+    return (
+        prev_row["mid_h"] < next_row["mid_l"]
+    )
 
-# num_weeks = 52  # Replace with the number of weeks you want
-# start_dates, end_dates = get_weeks(num_weeks)
-# for i in range(num_weeks):
-#     print(f"Week {i+1} - Start: {time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(start_dates[i]))}, End: {time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(end_dates[i]))}")
+def is_bearish_fair_value_gap(prev_row, next_row):
+    return (
+        prev_row["mid_l"] > next_row["mid_h"]
+    )
 
+def fair_value_gap_strategy(df):
+    balance = 100000  # Initial balance
+    risk_percent = 0.01  # Risk percentage per trade
+    rr = 2  # Reward-to-risk ratio
 
-# start_dates, end_dates = get_months(12)
-# for i in range(12):
-#     start_date_str = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(start_dates[i]))
-#     end_date_str = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(end_dates[i]))
-#     print(f"Month {i + 1}: Start Date: {start_date_str}, End Date: {end_date_str}")
+    for idx, middle_candle in df.iterrows():
+        if pd.Timestamp("10:00").time() <= middle_candle.name.time() < pd.Timestamp("11:00").time():
+            prev_candle = df.shift(1).loc[idx]
+            next_candle = df.shift(-1).loc[idx]
+
+            if prev_candle is not None and next_candle is not None:
+                # Bullish fair value gap
+                if middle_candle["mid_c"] > middle_candle["mid_o"] and is_bullish_fair_value_gap(prev_candle, next_candle):
+
+                    fair_value_gap_time = middle_candle.name
+                    print(f"Fair value gap is occurring at {fair_value_gap_time}")
+
+                    fair_value_gap_high = next_candle["mid_l"]
+                    stop_loss = prev_candle["mid_l"]
+                    take_profit = fair_value_gap_high + (fair_value_gap_high - stop_loss) * rr
+
+                    entry_price = fair_value_gap_high
+                    trade_type = "SELL"
+
+                # Bearish fair value gap
+                elif middle_candle["mid_c"] < middle_candle["mid_o"] and is_bearish_fair_value_gap(prev_candle, next_candle):
+
+                    fair_value_gap_time = middle_candle.name
+                    print(f"Fair value gap is occurring at {fair_value_gap_time}")
+
+                    fair_value_gap_low = next_candle["mid_h"]
+                    stop_loss = prev_candle["mid_h"]
+                    take_profit = fair_value_gap_low - (stop_loss - fair_value_gap_low) * rr
+
+                    entry_price = fair_value_gap_low
+                    trade_type = "BUY"
+
+                print(f"Fair Value Gap {trade_type} Trade:")
+                print(f"Entry Price: {entry_price}")
+                print(f"Stop Loss: {stop_loss}")
+                print(f"Take Profit: {take_profit}")
+
+                if trade_type == "SELL":
+                    if take_profit > entry_price:
+                        print("Invalid trade setup: Take Profit is higher than entry price.")
+                        continue
+                elif trade_type == "BUY":
+                    if take_profit < entry_price:
+                        print("Invalid trade setup: Take Profit is lower than entry price.")
+                        continue
+
+                # Simulate trade execution and update balance
+                if trade_type == "SELL":
+                    balance -= balance * risk_percent
+                    if stop_loss >= entry_price:
+                        balance -= balance * risk_percent
+                    elif take_profit <= entry_price:
+                        balance += balance * risk_percent
+                elif trade_type == "BUY":
+                    balance -= balance * risk_percent
+                    if stop_loss <= entry_price:
+                        balance -= balance * risk_percent
+                    elif take_profit >= entry_price:
+                        balance += balance * risk_percent
+
+                print(f"New balance: {balance}\n")
+
+fair_value_gap_strategy(data)

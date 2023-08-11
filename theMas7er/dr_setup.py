@@ -1,7 +1,13 @@
+import time
+from typing import Callable
+
 import pandas as pd
 import pytz
 
 from pandas import DataFrame
+
+from oanda_api import OandaAPI
+from utils import get_weeks
 
 # Define ANSI color codes
 RED = "\033[31m"
@@ -179,4 +185,30 @@ def backtesting_dr(df: DataFrame, range_start_time: str, range_end_time: str, in
 
     print(BLUE + f"Final balance: {balance}" + RESET)
     return balance
+
+
+MAGENTA_BG = "\u001b[45m"
+BLACK = "\u001b[40m"
+
+def run_backtest(callback: Callable, initial_balance: float, risk : float, rr: int, num_weeks: int):
+    pd.set_option('display.max_rows', 1000)
+
+    spx: OandaAPI = OandaAPI()
+
+    # start_dates, end_dates = get_months(num_months)
+    start_dates, end_dates = get_weeks(num_weeks)
+
+    balance = initial_balance
+
+    for i in range(num_weeks):
+
+        start_date_str = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(start_dates[i]))
+        end_date_str = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(end_dates[i]))
+        print(f"Month {i + 1}: Start Date: {start_date_str}, End Date: {end_date_str}")
+
+        data: DataFrame = spx.create_data("SPX500_USD", "M15", 4000, start_dates[i], end_dates[i])
+        balance: float = backtesting_dr(data, "9:30", "10:30", balance, risk, rr)
+
+    print(BLACK + f"Initial Balance: {initial_balance}, Risk: {risk*100}%, RR: {rr} \nFinal Balance: {balance} with a return of {((balance - initial_balance) / initial_balance) * 100}%")
+
 
