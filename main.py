@@ -1,13 +1,9 @@
 from pandas import DataFrame
 
-from theMas7er.dr_setup import backtesting_dr
-from theMas7er.dr_setup import run_backtest
-
-
 import pandas as pd
 
 
-from oanda_api import OandaAPI
+from data.oanda_api import OandaAPI
 from utils import get_weeks
 
 # weeks = 156

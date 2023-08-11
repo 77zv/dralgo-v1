@@ -6,7 +6,7 @@ import pytz
 
 from pandas import DataFrame
 
-from oanda_api import OandaAPI
+from data.oanda_api import OandaAPI
 from utils import get_weeks
 
 # Define ANSI color codes

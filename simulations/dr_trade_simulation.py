@@ -1,4 +1,4 @@
-from oanda_api import OandaAPI
+from data.oanda_api import OandaAPI
 from theMas7er.old_dr.dr_range import *
 from theMas7er.old_dr.bias import *
 import pandas as pd
