@@ -4,10 +4,11 @@ import pandas as pd
 
 
 from data.oanda_api import OandaAPI
+from theMas7er.dr_setup import run_backtest, backtesting_dr
 from utils import get_weeks
 
-# weeks = 156
-# run_backtest(backtesting_dr, 10000, 0.01, 1, weeks)
+weeks = 156
+run_backtest(backtesting_dr, 10000, 0.01, 1, weeks)
 
 pd.set_option('display.max_rows', 1000)
 
@@ -95,4 +96,4 @@ def fair_value_gap_strategy(df):
 
                 print(f"New balance: {balance}\n")
 
-fair_value_gap_strategy(data)
+# fair_value_gap_strategy(data)

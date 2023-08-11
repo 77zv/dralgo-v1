@@ -1,6 +1,9 @@
 import datetime
 import calendar
 import time
+from enum import Enum
+
+
 def his_data_filepath(pair, granularity):
     """
     It takes a pair and a granularity and returns a filepath
@@ -92,3 +95,13 @@ def get_weeks(num_weeks) -> tuple:
         end_dates.append(end_date_unix)
 
     return start_dates, end_dates
+
+class Color(Enum):
+    # Define ANSI color codes
+    RED ="\033[31m"
+    GREEN = "\033[32m"
+    YELLOW = "\033[33m"
+    BLUE = "\033[34m"
+    MAGENTA_BG = "\u001b[45m"
+    BLACK = "\u001b[40m"
+    RESET = "\033[0m"  # Reset text attributes to default

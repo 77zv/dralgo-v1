@@ -8,7 +8,6 @@ from requests import Response
 
 import defs
 
-
 class OandaAPI:
     def __init__(self):
         self.df = None
@@ -99,7 +98,7 @@ class OandaAPI:
         :param pair: The currency pair you want to download
         :param granularity: The candlestick chart's time interval.
         """
-        candles_df.to_pickle(f"his_data/{pair}_{granularity}.pkl")
+        candles_df.to_pickle(f"data/his_data/{pair}_{granularity}.pkl")
 
     def create_data(self, pair: str, granularity: str, count: int = 4000, start_time: int  | None = None, end_time: int | None = None) -> DataFrame | None:
         """
