@@ -271,7 +271,7 @@ def run_backtest(callback: Callable, initial_balance: float, risk: float, rr: in
     for i in range(num_weeks):
         start_date_str = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(start_dates[i]))
         end_date_str = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(end_dates[i]))
-        print(f"Month {i + 1}: Start Date: {start_date_str}, End Date: {end_date_str}")
+        print(f"Week {i + 1}: Start Date: {start_date_str}, End Date: {end_date_str}")
 
         data: DataFrame = spx.create_data("SPX500_USD", "M15", 4000, start_dates[i], end_dates[i])
         balance: float = backtesting_dr(data, "9:30", "10:30", balance, risk, rr)
