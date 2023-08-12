@@ -40,7 +40,7 @@ def backtesting_dr(df: DataFrame, range_start_time: str, range_end_time: str, in
             # The data after the range end time
             after_range_end = date_data[date_data.index >= end_time]
 
-             if not after_range_end.empty:
+            if not after_range_end.empty:
                 above_high_after_range = after_range_end[after_range_end["mid_c"] > highest_high]
                 below_low_after_range = after_range_end[after_range_end["mid_c"] < lowest_low]
 
