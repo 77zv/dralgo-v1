@@ -1,3 +1,4 @@
+import os
 import time
 from typing import Callable
 
@@ -10,8 +11,11 @@ from data.oanda_api import OandaAPI
 from utils import get_weeks
 from utils import Color
 
-def backtesting_dr(df: DataFrame, range_start_time: str, range_end_time: str, initial_balance: float, risk_percent: float, rr: int) -> float:
+
+def backtesting_dr(df: DataFrame, range_start_time: str, range_end_time: str, initial_balance: float,
+                   risk_percent: float, rr: int) -> float:
     balance = initial_balance
+    trades = []
 
     for date, date_data in df.groupby(df.index.date):
         date_range_data = date_data.between_time(range_start_time, range_end_time, inclusive="left")
@@ -36,6 +40,9 @@ def backtesting_dr(df: DataFrame, range_start_time: str, range_end_time: str, in
             # The data after the range end time
             after_range_end = date_data[date_data.index >= end_time]
 
+            if not after_range_end.empty and after_range_end.index[0].time() > pd.Timestamp("15:45").time():
+                continue  # Skip processing if the first entry after range end time is past 3:45 pm
+
             if not after_range_end.empty:
                 above_high_after_range = after_range_end[after_range_end["mid_c"] > highest_high]
                 below_low_after_range = after_range_end[after_range_end["mid_c"] < lowest_low]
@@ -50,6 +57,7 @@ def backtesting_dr(df: DataFrame, range_start_time: str, range_end_time: str, in
 
                 if not above_high_after_range.empty:
                     first_close_above_high_time = above_high_after_range.index[0]
+
                     print(
                         Color.YELLOW.value + f"First close above highest high after range end time at: {first_close_above_high_time}" + Color.RESET.value)
 
@@ -85,31 +93,59 @@ def backtesting_dr(df: DataFrame, range_start_time: str, range_end_time: str, in
                                 balance += balance * risk_percent
                                 print(
                                     Color.BLUE.value + f"Take profit hit at: {row.name}. New balance: {balance}" + Color.RESET.value)
+                                trades.append({
+                                    "Time": row.name,
+                                    "Trade Type": "Take Profit",
+                                    "Price": row["mid_h"],
+                                    "Balance Change": balance * risk_percent
+                                })
                                 trade_closed = True
                                 break
                             elif row["mid_l"] <= stop_loss:
                                 balance -= balance * risk_percent
                                 print(
                                     Color.RED.value + f"Stop loss hit at: {row.name}. New balance: {balance}" + Color.RESET.value)
+                                trades.append({
+                                    "Time": row.name,
+                                    "Trade Type": "Stop Loss",
+                                    "Price": row["mid_l"],
+                                    "Balance Change": -balance * risk_percent
+                                })
                                 trade_closed = True
                                 break
+
                         # if the trade is not closed by 16:45, close it automatically
                         if not trade_closed and after_trade_into_50_percent.index[-1].time() >= pd.Timestamp(
                                 "16:45").time():
 
                             if row["mid_c"] >= fifty_percent_level:
-                                above_fifty_percent_level_after_close = (row["mid_c"] - fifty_percent_level)/ (take_profit - fifty_percent_level) * risk_percent * balance
+                                above_fifty_percent_level_after_close = (row["mid_c"] - fifty_percent_level) / (
+                                        take_profit - fifty_percent_level) * risk_percent * balance
                                 balance += above_fifty_percent_level_after_close
                                 print(
                                     Color.RED.value + f"Trade automatically closed at {after_trade_into_50_percent.index[-1]}. New balance: {balance}, taking a win of +{above_fifty_percent_level_after_close}" + Color.RESET.value)
+                                trades.append({
+                                    "Time": after_trade_into_50_percent.index[-1],
+                                    "Trade Type": "Auto Close - Win",
+                                    "Price": row["mid_c"],
+                                    "Balance Change": above_fifty_percent_level_after_close
+                                })
                             else:
-                                below_fifty_percent_level_after_close = (fifty_percent_level - row["mid_c"]) / (fifty_percent_level - take_profit) * risk_percent * balance
+                                below_fifty_percent_level_after_close = (fifty_percent_level - row["mid_c"]) / (
+                                        fifty_percent_level - take_profit) * risk_percent * balance
                                 balance -= below_fifty_percent_level_after_close
                                 print(
                                     Color.RED.value + f"Trade automatically closed at {after_trade_into_50_percent.index[-1]}. New balance: {balance}, taking a loss of -{below_fifty_percent_level_after_close}" + Color.RESET.value)
+                                trades.append({
+                                    "Time": after_trade_into_50_percent.index[-1],
+                                    "Trade Type": "Auto Close - Loss",
+                                    "Price": row["mid_c"],
+                                    "Balance Change": -below_fifty_percent_level_after_close
+                                })
 
                     else:
-                        print(Color.RED.value + "Price did not trade into 50% of the range after closing above the range." + Color.RESET.value)
+                        print(
+                            Color.RED.value + "Price did not trade into 50% of the range after closing above the range." + Color.RESET.value)
 
                 if not below_low_after_range.empty:
                     first_close_below_low_time = below_low_after_range.index[0]
@@ -147,12 +183,24 @@ def backtesting_dr(df: DataFrame, range_start_time: str, range_end_time: str, in
                                 balance += balance * risk_percent
                                 print(
                                     Color.BLUE.value + f"Take profit hit at: {row.name}. New balance: {balance}" + Color.RESET.value)
+                                trades.append({
+                                    "Time": row.name,
+                                    "Trade Type": "Take Profit",
+                                    "Price": row["mid_l"],
+                                    "Balance Change": balance * risk_percent
+                                })
                                 trade_closed = True
                                 break
                             elif row["mid_h"] >= stop_loss:
                                 balance -= balance * risk_percent
                                 print(
                                     Color.RED.value + f"Stop loss hit at: {row.name}. New balance: {balance}" + Color.RESET.value)
+                                trades.append({
+                                    "Time": row.name,
+                                    "Trade Type": "Stop Loss",
+                                    "Price": row["mid_h"],
+                                    "Balance Change": -balance * risk_percent
+                                })
                                 trade_closed = True
                                 break
 
@@ -161,27 +209,57 @@ def backtesting_dr(df: DataFrame, range_start_time: str, range_end_time: str, in
                                 "16:45").time():
 
                             if row["mid_c"] >= fifty_percent_level:
-                                above_fifty_percent_level_after_close = (row["mid_c"] - fifty_percent_level)/ (take_profit - fifty_percent_level) * risk_percent * balance
+                                above_fifty_percent_level_after_close = (row["mid_c"] - fifty_percent_level) / (
+                                        take_profit - fifty_percent_level) * risk_percent * balance
                                 balance -= above_fifty_percent_level_after_close
                                 print(
                                     Color.RED.value + f"Trade automatically closed at {after_trade_into_50_percent.index[-1]}. New balance: {balance}, taking a loss of -{above_fifty_percent_level_after_close}" + Color.RESET.value)
+                                trades.append({
+                                    "Time": after_trade_into_50_percent.index[-1],
+                                    "Trade Type": "Auto Close - Loss",
+                                    "Price": row["mid_c"],
+                                    "Balance Change": -above_fifty_percent_level_after_close
+                                })
                             else:
-                                below_fifty_percent_level_after_close = (fifty_percent_level - row["mid_c"]) / (fifty_percent_level - take_profit) * risk_percent * balance
+                                below_fifty_percent_level_after_close = (fifty_percent_level - row["mid_c"]) / (
+                                        fifty_percent_level - take_profit) * risk_percent * balance
                                 balance += below_fifty_percent_level_after_close
                                 print(
                                     Color.RED.value + f"Trade automatically closed at {after_trade_into_50_percent.index[-1]}. New balance: {balance}, taking a win of +{below_fifty_percent_level_after_close}" + Color.RESET.value)
+                                trades.append({
+                                    "Time": after_trade_into_50_percent.index[-1],
+                                    "Trade Type": "Auto Close - Win",
+                                    "Price": row["mid_c"],
+                                    "Balance Change": below_fifty_percent_level_after_close
+                                })
 
                     else:
-                        print(Color.RED.value + "Price did not trade into 50% of the range after closing below the range." + Color.RESET.value)
+                        print(
+                            Color.RED.value + "Price did not trade into 50% of the range after closing below the range." + Color.RESET.value)
 
         print("\n")
-
     print(Color.BLUE.value + f"Final balance: {balance}" + Color.RESET.value)
+
+    # Write trades to CSV
+    trades_df = pd.DataFrame(trades)
+
+    # Append new trades to existing CSV file if it exists, otherwise create a new file
+    try:
+        existing_trades_df = pd.read_csv("trades.csv")
+        combined_trades_df = pd.concat([existing_trades_df, trades_df], ignore_index=True)
+        combined_trades_df.to_csv("trades.csv", index=False)
+    except FileNotFoundError:
+        trades_df.to_csv("trades.csv", index=False)
+
     return balance
 
 
-def run_backtest(callback: Callable, initial_balance: float, risk : float, rr: int, num_weeks: int):
+def run_backtest(callback: Callable, initial_balance: float, risk: float, rr: int, num_weeks: int):
     pd.set_option('display.max_rows', 1000)
+    # Create a fresh new CSV file for trades
+    trades_filename = "trades.csv"
+    if os.path.exists(trades_filename):
+        os.remove(trades_filename)
 
     spx: OandaAPI = OandaAPI()
 
@@ -191,7 +269,6 @@ def run_backtest(callback: Callable, initial_balance: float, risk : float, rr: i
     balance = initial_balance
 
     for i in range(num_weeks):
-
         start_date_str = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(start_dates[i]))
         end_date_str = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(end_dates[i]))
         print(f"Month {i + 1}: Start Date: {start_date_str}, End Date: {end_date_str}")
@@ -199,7 +276,5 @@ def run_backtest(callback: Callable, initial_balance: float, risk : float, rr: i
         data: DataFrame = spx.create_data("SPX500_USD", "M15", 4000, start_dates[i], end_dates[i])
         balance: float = backtesting_dr(data, "9:30", "10:30", balance, risk, rr)
 
-    print(Color.BLACK.value + f"Initial Balance: {initial_balance}, Risk: {risk*100}%, RR: {rr} \nFinal Balance: {balance} with a return of {((balance - initial_balance) / initial_balance) * 100}%" + Color.RESET.value)
-
-
-
+    print(
+        Color.BLACK.value + f"Initial Balance: {initial_balance}, Risk: {risk * 100}%, RR: {rr} \nFinal Balance: {balance} with a return of {((balance - initial_balance) / initial_balance) * 100}%" + Color.RESET.value)
